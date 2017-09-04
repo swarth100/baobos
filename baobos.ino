@@ -2,9 +2,15 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define servoNum 5
-#define maxRunningServos 5
+/* Exit pin where the first servo motor's control can be found */
+#define startingPin 2
 
+#define updateMilliThreshold 100
+
+/* Total number of servo motors */
+#define servoNum 5
+
+/* ServoObject struct holds servo motor instances together with their default angles */
 struct servoObject {
   Servo servo;
   int maxAngle = 90;
@@ -14,21 +20,19 @@ struct servoObject {
   bool done = true;
 };
 
+/* Array of initialised servoObjects. Populated in setup */
 struct servoObject servoArray[servoNum];
 
-// twelve servo objects can be created on most boards
+int pinNumber = startingPin;
 
-int pos = 0;
-int randomIndex;
-
-int startingPin = 2;
+long updateTime = 0;
 
 void setup() {
   for(int i = 0; i < servoNum; i++) {
-    servoArray[i].servo.attach(startingPin);
+    servoArray[i].servo.attach(pinNumber);
     servoArray[i].servo.write(servoArray[i].minAngle);
 
-    startingPin ++;
+    pinNumber ++;
   }
 
   /* Manual settings */
@@ -50,15 +54,20 @@ void setup() {
 
 void runServo (int index) {
 
+  /* Get the current servo by reference in order to be able 
+     to change the servoObject's fields */
   struct servoObject* curServo = &servoArray[index];
   curServo->done = false;
 
+  /* Accordingly to the direction of motion, increase or decrease the servo's
+     angle */
   if (curServo->increasing) {
     curServo->curAngle = curServo->curAngle + 1;
   } else {
     curServo->curAngle = curServo->curAngle - 1;
   }
 
+  /* When the max of min angles are reached, invert the direction of motion */
   if (curServo->curAngle >= curServo->maxAngle) {
     curServo->increasing = false;
   } else if (curServo->curAngle <= curServo->minAngle) {
@@ -66,6 +75,7 @@ void runServo (int index) {
     curServo->increasing = true;
   }
 
+  /* Write the newly determined angle to the servo */
   curServo->servo.write(curServo->curAngle);
 
   // Serial.println(curServo->increasing);
@@ -73,9 +83,16 @@ void runServo (int index) {
 }
 
 void loop() {
-  for(int i = 0; i < servoNum; i++) {
-    runServo(i);
-  }
 
-  delay(150);
+  long curMillis = millis();
+
+  /* Trigger every updateMilliThreshold */
+  if (curMillis - updateTime >= updateMilliThreshold) {
+    /* Loop through each servo and trigger motion */
+    for(int i = 0; i < servoNum; i++) {
+      runServo(i);
+    }
+
+    updateTime = curMillis;
+  }
 }
