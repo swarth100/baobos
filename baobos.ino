@@ -2,9 +2,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-/* Exit pin where the first servo motor's control can be found */
-#define startingPin 2
-
 #define updateMilliThreshold 100
 
 /* Total number of servo motors */
@@ -23,28 +20,30 @@ struct servoObject {
 /* Array of initialised servoObjects. Populated in setup */
 struct servoObject servoArray[servoNum];
 
-int pinNumber = startingPin;
-
 long updateTime = 0;
+
+int servoPins[] = {8, 9, 10, 11, 13};
 
 void setup() {
   for(int i = 0; i < servoNum; i++) {
-    servoArray[i].servo.attach(pinNumber);
+    servoArray[i].servo.attach(servoPins[i]);
     servoArray[i].servo.write(servoArray[i].minAngle);
-
-    pinNumber ++;
   }
 
   /* Manual settings */
-  servoArray[0].minAngle = 60;
-  servoArray[0].maxAngle = 95;
-  
+  servoArray[0].minAngle = 70;
+  servoArray[0].maxAngle = 115;
+
+  servoArray[1].maxAngle = 80;
+
+  servoArray[2].minAngle = 35;
   servoArray[2].maxAngle = 95;
 
-  servoArray[3].minAngle = 35;
+  servoArray[3].minAngle = 25;
   servoArray[3].maxAngle = 70;
 
   servoArray[4].minAngle = 45;
+  servoArray[4].maxAngle = 110;
 
   /* Random number generation */
   srand(time(NULL));
