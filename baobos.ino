@@ -22,7 +22,7 @@ struct servoObject servoArray[servoNum];
 
 long updateTime = 0;
 
-int servoPins[] = {8, 9, 10, 11, 13};
+int servoPins[] = {3, 2, 4, 5, 6};
 
 void setup() {
   for(int i = 0; i < servoNum; i++) {
@@ -31,8 +31,8 @@ void setup() {
   }
 
   /* Manual settings */
-  servoArray[0].minAngle = 70;
-  servoArray[0].maxAngle = 115;
+  servoArray[0].minAngle = 40;
+  servoArray[0].maxAngle = 95;
 
   servoArray[1].maxAngle = 80;
 
@@ -40,7 +40,7 @@ void setup() {
   servoArray[2].maxAngle = 95;
 
   servoArray[3].minAngle = 25;
-  servoArray[3].maxAngle = 70;
+  servoArray[3].maxAngle = 65;
 
   servoArray[4].minAngle = 45;
   servoArray[4].maxAngle = 110;
@@ -73,12 +73,11 @@ void runServo (int index) {
     curServo->done = true;
     curServo->increasing = true;
   }
+}
 
-  /* Write the newly determined angle to the servo */
+void holdServo (int index) {
+  struct servoObject* curServo = &servoArray[index];
   curServo->servo.write(curServo->curAngle);
-
-  // Serial.println(curServo->increasing);
-  // Serial.println(curServo->curAngle);
 }
 
 void loop() {
@@ -89,8 +88,10 @@ void loop() {
   if (curMillis - updateTime >= updateMilliThreshold) {
     /* Loop through each servo and trigger motion */
     for(int i = 0; i < servoNum; i++) {
-      runServo(i);
+      holdServo(i);
     }
+
+    // runServo(0);
 
     updateTime = curMillis;
   }
