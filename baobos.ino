@@ -13,7 +13,7 @@ struct servoObject {
   int maxAngle = 90;
   int minAngle = 45;
   int curAngle = 60;
-  bool increasing = true;
+  int targetAngle = 60;
   bool done = true;
 };
 
@@ -23,6 +23,43 @@ struct servoObject servoArray[servoNum];
 long updateTime = 0;
 
 int servoPins[] = {3, 2, 4, 5, 6};
+
+void runServo (int index) {
+
+  /* Get the current servo by reference in order to be able 
+     to change the servoObject's fields */
+  struct servoObject* curServo = &servoArray[index];
+
+  if (!curServo->done) {
+    if (curServo->targetAngle > curServo->curAngle) {
+      curServo->curAngle = curServo->curAngle + 1;
+    } else if (curServo->targetAngle < curServo->curAngle)  {
+      curServo->curAngle = curServo->curAngle - 1;
+    } else {
+      curServo->done = true;
+    }
+  }
+
+  curServo->servo.write(curServo->curAngle + millis() % 2);
+}
+
+int setTargetAngle(int percentage, int index) {
+  struct servoObject* curServo = &servoArray[index];
+
+  float baseAngle = (curServo->maxAngle - curServo->minAngle) * ((float) percentage / 100);
+
+  int newAngle = (int) (baseAngle + curServo->minAngle);
+
+  servoArray[index].targetAngle = newAngle;
+  servoArray[index].done = false;
+}
+
+void reachTarget(int p1, int p2, int p3, int p4) {
+  setTargetAngle(p1, 1);
+  setTargetAngle(p2, 2);
+  setTargetAngle(p3, 3);
+  setTargetAngle(p4, 4);
+}
 
 void setup() {
   for(int i = 0; i < servoNum; i++) {
@@ -49,35 +86,8 @@ void setup() {
   srand(time(NULL));
 
   Serial.begin(9600);
-}
 
-void runServo (int index) {
-
-  /* Get the current servo by reference in order to be able 
-     to change the servoObject's fields */
-  struct servoObject* curServo = &servoArray[index];
-  curServo->done = false;
-
-  /* Accordingly to the direction of motion, increase or decrease the servo's
-     angle */
-  if (curServo->increasing) {
-    curServo->curAngle = curServo->curAngle + 1;
-  } else {
-    curServo->curAngle = curServo->curAngle - 1;
-  }
-
-  /* When the max of min angles are reached, invert the direction of motion */
-  if (curServo->curAngle >= curServo->maxAngle) {
-    curServo->increasing = false;
-  } else if (curServo->curAngle <= curServo->minAngle) {
-    curServo->done = true;
-    curServo->increasing = true;
-  }
-}
-
-void holdServo (int index) {
-  struct servoObject* curServo = &servoArray[index];
-  curServo->servo.write(curServo->curAngle);
+  reachTarget(50, 100, 0, 45);
 }
 
 void loop() {
@@ -88,10 +98,8 @@ void loop() {
   if (curMillis - updateTime >= updateMilliThreshold) {
     /* Loop through each servo and trigger motion */
     for(int i = 0; i < servoNum; i++) {
-      holdServo(i);
+      runServo(i);
     }
-
-    // runServo(0);
 
     updateTime = curMillis;
   }
