@@ -2,9 +2,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-/* Exit pin where the first servo motor's control can be found */
-#define startingPin 2
-
 #define updateMilliThreshold 100
 
 /* Total number of servo motors */
@@ -16,70 +13,81 @@ struct servoObject {
   int maxAngle = 90;
   int minAngle = 45;
   int curAngle = 60;
-  bool increasing = true;
+  int targetAngle = 60;
   bool done = true;
 };
 
 /* Array of initialised servoObjects. Populated in setup */
 struct servoObject servoArray[servoNum];
 
-int pinNumber = startingPin;
-
 long updateTime = 0;
 
-void setup() {
-  for(int i = 0; i < servoNum; i++) {
-    servoArray[i].servo.attach(pinNumber);
-    servoArray[i].servo.write(servoArray[i].minAngle);
-
-    pinNumber ++;
-  }
-
-  /* Manual settings */
-  servoArray[0].minAngle = 60;
-  servoArray[0].maxAngle = 95;
-  
-  servoArray[2].maxAngle = 95;
-
-  servoArray[3].minAngle = 35;
-  servoArray[3].maxAngle = 70;
-
-  servoArray[4].minAngle = 45;
-
-  /* Random number generation */
-  srand(time(NULL));
-
-  Serial.begin(9600);
-}
+int servoPins[] = {3, 2, 4, 5, 6};
 
 void runServo (int index) {
 
   /* Get the current servo by reference in order to be able 
      to change the servoObject's fields */
   struct servoObject* curServo = &servoArray[index];
-  curServo->done = false;
 
-  /* Accordingly to the direction of motion, increase or decrease the servo's
-     angle */
-  if (curServo->increasing) {
-    curServo->curAngle = curServo->curAngle + 1;
-  } else {
-    curServo->curAngle = curServo->curAngle - 1;
+  if (!curServo->done) {
+    if (curServo->targetAngle > curServo->curAngle) {
+      curServo->curAngle = curServo->curAngle + 1;
+    } else if (curServo->targetAngle < curServo->curAngle)  {
+      curServo->curAngle = curServo->curAngle - 1;
+    } else {
+      curServo->done = true;
+    }
   }
 
-  /* When the max of min angles are reached, invert the direction of motion */
-  if (curServo->curAngle >= curServo->maxAngle) {
-    curServo->increasing = false;
-  } else if (curServo->curAngle <= curServo->minAngle) {
-    curServo->done = true;
-    curServo->increasing = true;
+  curServo->servo.write(curServo->curAngle + millis() % 2);
+}
+
+int setTargetAngle(int percentage, int index) {
+  struct servoObject* curServo = &servoArray[index];
+
+  float baseAngle = (curServo->maxAngle - curServo->minAngle) * ((float) percentage / 100);
+
+  int newAngle = (int) (baseAngle + curServo->minAngle);
+
+  servoArray[index].targetAngle = newAngle;
+  servoArray[index].done = false;
+}
+
+void reachTarget(int p1, int p2, int p3, int p4) {
+  setTargetAngle(p1, 1);
+  setTargetAngle(p2, 2);
+  setTargetAngle(p3, 3);
+  setTargetAngle(p4, 4);
+}
+
+void setup() {
+  for(int i = 0; i < servoNum; i++) {
+    servoArray[i].servo.attach(servoPins[i]);
+    servoArray[i].servo.write(servoArray[i].minAngle);
   }
 
-  /* Write the newly determined angle to the servo */
-  curServo->servo.write(curServo->curAngle);
+  /* Manual settings */
+  servoArray[0].minAngle = 40;
+  servoArray[0].maxAngle = 95;
 
-  // Serial.println(curServo->increasing);
-  // Serial.println(curServo->curAngle);
+  servoArray[1].maxAngle = 80;
+
+  servoArray[2].minAngle = 35;
+  servoArray[2].maxAngle = 95;
+
+  servoArray[3].minAngle = 25;
+  servoArray[3].maxAngle = 65;
+
+  servoArray[4].minAngle = 40;
+  servoArray[4].maxAngle = 110;
+
+  /* Random number generation */
+  srand(time(NULL));
+
+  Serial.begin(115200);
+
+  reachTarget(70, 90, 20, 45);
 }
 
 void loop() {
@@ -94,5 +102,29 @@ void loop() {
     }
 
     updateTime = curMillis;
+  }
+
+  if (Serial.available() >= 6) {
+    uint8_t peekVal = Serial.peek();
+    if (peekVal == 200) {
+      Serial.write(201);
+      Serial.read();
+      int a0 = (uint8_t) Serial.read();
+      int a1 = (uint8_t) Serial.read();
+      int a2 = (uint8_t) Serial.read();
+      int a3 = (uint8_t) Serial.read();
+      int a4 = (uint8_t) Serial.read();
+
+      reachTarget(a1, a2, a3, a4);
+
+      Serial.write(a0);
+      Serial.write(a1);
+      Serial.write(a2);
+      Serial.write(a3);
+      Serial.write(a4);
+    } else {
+      // Serial.write(Serial.read() + 1);
+      Serial.read();
+    }
   }
 }
