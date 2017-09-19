@@ -79,7 +79,7 @@ void setup() {
   servoArray[3].minAngle = 25;
   servoArray[3].maxAngle = 65;
 
-  servoArray[4].minAngle = 45;
+  servoArray[4].minAngle = 40;
   servoArray[4].maxAngle = 110;
 
   /* Random number generation */
@@ -87,7 +87,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  reachTarget(90, 140, 20, 45);
+  reachTarget(70, 90, 20, 45);
 }
 
 void loop() {
@@ -109,11 +109,19 @@ void loop() {
     if (peekVal == 200) {
       Serial.write(201);
       Serial.read();
-      Serial.write((uint8_t) Serial.read());
-      Serial.write((uint8_t) Serial.read());
-      Serial.write((uint8_t) Serial.read());
-      Serial.write((uint8_t) Serial.read());
-      Serial.write((uint8_t) Serial.read());
+      int a0 = (uint8_t) Serial.read();
+      int a1 = (uint8_t) Serial.read();
+      int a2 = (uint8_t) Serial.read();
+      int a3 = (uint8_t) Serial.read();
+      int a4 = (uint8_t) Serial.read();
+
+      reachTarget(a1, a2, a3, a4);
+
+      Serial.write(a0);
+      Serial.write(a1);
+      Serial.write(a2);
+      Serial.write(a3);
+      Serial.write(a4);
     } else {
       // Serial.write(Serial.read() + 1);
       Serial.read();
