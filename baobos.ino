@@ -85,9 +85,9 @@ void setup() {
   /* Random number generation */
   srand(time(NULL));
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
-  reachTarget(50, 100, 0, 45);
+  reachTarget(90, 140, 20, 45);
 }
 
 void loop() {
@@ -102,5 +102,21 @@ void loop() {
     }
 
     updateTime = curMillis;
+  }
+
+  if (Serial.available() >= 6) {
+    uint8_t peekVal = Serial.peek();
+    if (peekVal == 200) {
+      Serial.write(201);
+      Serial.read();
+      Serial.write((uint8_t) Serial.read());
+      Serial.write((uint8_t) Serial.read());
+      Serial.write((uint8_t) Serial.read());
+      Serial.write((uint8_t) Serial.read());
+      Serial.write((uint8_t) Serial.read());
+    } else {
+      // Serial.write(Serial.read() + 1);
+      Serial.read();
+    }
   }
 }
