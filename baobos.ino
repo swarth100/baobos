@@ -54,7 +54,8 @@ int setTargetAngle(int percentage, int index) {
   servoArray[index].done = false;
 }
 
-void reachTarget(int p1, int p2, int p3, int p4) {
+void reachTarget(int p0, int p1, int p2, int p3, int p4) {
+  setTargetAngle(p0, 0);
   setTargetAngle(p1, 1);
   setTargetAngle(p2, 2);
   setTargetAngle(p3, 3);
@@ -87,7 +88,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  reachTarget(70, 90, 20, 45);
+  reachTarget(45, 70, 90, 20, 45);
 }
 
 void loop() {
@@ -115,7 +116,7 @@ void loop() {
       int a3 = (uint8_t) Serial.read();
       int a4 = (uint8_t) Serial.read();
 
-      reachTarget(a1, a2, a3, a4);
+      reachTarget(a0, a1, a2, a3, a4);
 
       Serial.write(a0);
       Serial.write(a1);
