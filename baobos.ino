@@ -93,6 +93,30 @@ void setup() {
 
 void loop() {
 
+  int b0 = 0;
+  int b1 = 0;
+  int b2 = 0;
+  int b3 = 0;
+  int b4 = 0;
+
+  bool writeToSerial = true;
+
+  if (analogRead(A0) >= 100) {
+    b0 = 1;
+  }
+  if (analogRead(A1) >= 100) {
+    b1 = 1;
+  }
+  if (analogRead(A2) >= 100) {
+    b2 = 1;
+  }
+  if (analogRead(A3) >= 100) {
+    b3 = 1;
+  }
+  if (analogRead(A4) >= 100) {
+    b4 = 1;
+  }
+
   long curMillis = millis();
 
   /* Trigger every updateMilliThreshold */
@@ -103,12 +127,13 @@ void loop() {
     }
 
     updateTime = curMillis;
+  } else {
+    writeToSerial = false;
   }
 
   if (Serial.available() >= 6) {
     uint8_t peekVal = Serial.peek();
     if (peekVal == 200) {
-      Serial.write(201);
       Serial.read();
       int a0 = (uint8_t) Serial.read();
       int a1 = (uint8_t) Serial.read();
@@ -118,14 +143,19 @@ void loop() {
 
       reachTarget(a0, a1, a2, a3, a4);
 
-      Serial.write(a0);
-      Serial.write(a1);
-      Serial.write(a2);
-      Serial.write(a3);
-      Serial.write(a4);
+      writeToSerial = true;      
     } else {
       // Serial.write(Serial.read() + 1);
       Serial.read();
     }
+  }
+
+  if (writeToSerial) {
+    Serial.write(201);
+    Serial.write(b0);
+    Serial.write(b1);
+    Serial.write(b2);
+    Serial.write(b3);
+    Serial.write(b4);
   }
 }
