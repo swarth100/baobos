@@ -2,6 +2,8 @@
 #include <time.h>
 #include <stdlib.h>
 
+/* threshold for updates.
+   Applies to both servo Motor communiction ans Serial port. */
 #define updateMilliThreshold 100
 
 /* Total number of servo motors */
@@ -22,14 +24,17 @@ struct servoObject servoArray[servoNum];
 
 long updateTime = 0;
 
+/* PINS available for servo motors, in a specific order */
 int servoPins[] = {3, 2, 4, 5, 6};
 
+/* If a given servo is available fro movement, it makes it step closer to its target angle */
 void runServo (int index) {
 
   /* Get the current servo by reference in order to be able 
      to change the servoObject's fields */
   struct servoObject* curServo = &servoArray[index];
 
+  /* Servo must not be in a completed state */
   if (!curServo->done) {
     if (curServo->targetAngle > curServo->curAngle) {
       curServo->curAngle = curServo->curAngle + 1;
@@ -40,16 +45,32 @@ void runServo (int index) {
     }
   }
 
+  /* Writes the new position to the servo motor.
+     The given position could also be unchanged should the servo have been in
+     a completed state.
+     millis() % 2 is necessary to attempt to randomise the output so that the
+     servo is actually at the correct position. */
   curServo->servo.write(curServo->curAngle + millis() % 2);
 }
 
+/* Sets a given servoMotor's angle as percentage of its movement range.
+   Movement percentages are in range 0%-100%, where a 0% movement will
+   force the servo to reach its minAngle. 100% movement will instead reach
+   maxAngle.
+   All percentages inbetween are scaled accordingly.*/
 int setTargetAngle(int percentage, int index) {
+  /* Retrieve the servo object corresponding to the correct index */
   struct servoObject* curServo = &servoArray[index];
 
+  /* Determine the angle offset determined by the percentage.
+     0 offset at 0%, (maxAngle - minAngle) offset at 100%. */
   float baseAngle = (curServo->maxAngle - curServo->minAngle) * ((float) percentage / 100);
 
+  /* Add the given offset to minAngle to determine the correct new
+     position of the servo Motor. */
   int newAngle = (int) (baseAngle + curServo->minAngle);
 
+  /* Set the angle and allow movement on the servo */
   servoArray[index].targetAngle = newAngle;
   servoArray[index].done = false;
 }
