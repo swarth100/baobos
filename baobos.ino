@@ -9,6 +9,13 @@
 /* Total number of servo motors */
 #define servoNum 5
 
+/* General global value definitions */
+#define BAOBOS_ID 201
+#define BAOBUI_ID 200
+#define ANALOG_PRESSURE_PAD_THRESHOLD 100
+#define BUFFER_DATA_LENGTH 6
+#define BAUDRATE 115200
+
 /* ServoObject struct holds servo motor instances together with their default angles */
 struct servoObject {
   Servo servo;
@@ -123,7 +130,7 @@ void setup() {
 
   /* Begin communication over Serial Port with a baud
      rate of 115200*/
-  Serial.begin(115200);
+  Serial.begin(BAUDRATE);
 
   /* Sets a general position to reach should serial
      communication be slow to setup. This position 
@@ -148,19 +155,19 @@ void loop() {
 
   /* Switch through all the analog readings, setting the input reading
      fields accordingly. */
-  if (analogRead(A0) >= 100) {
+  if (analogRead(A0) >= ANALOG_PRESSURE_PAD_THRESHOLD) {
     b0 = 1;
   }
-  if (analogRead(A1) >= 100) {
+  if (analogRead(A1) >= ANALOG_PRESSURE_PAD_THRESHOLD) {
     b1 = 1;
   }
-  if (analogRead(A2) >= 100) {
+  if (analogRead(A2) >= ANALOG_PRESSURE_PAD_THRESHOLD) {
     b2 = 1;
   }
-  if (analogRead(A3) >= 100) {
+  if (analogRead(A3) >= ANALOG_PRESSURE_PAD_THRESHOLD) {
     b3 = 1;
   }
-  if (analogRead(A4) >= 100) {
+  if (analogRead(A4) >= ANALOG_PRESSURE_PAD_THRESHOLD) {
     b4 = 1;
   }
 
@@ -182,12 +189,12 @@ void loop() {
   }
 
   /* Wait for 6 bytes of data to have been sent over serial */
-  if (Serial.available() >= 6) {
+  if (Serial.available() >= BUFFER_DATA_LENGTH) {
     /* Peek at the first byte to determine if it's a valid read ID */
     uint8_t peekVal = Serial.peek();
 
     /* ID of 200 is used by BAoBUI */
-    if (peekVal == 200) {
+    if (peekVal == BAOBUI_ID) {
       /* Read the servoAngles */
       Serial.read();
       int a0 = (uint8_t) Serial.read();
@@ -202,7 +209,6 @@ void loop() {
       /* Force a reply */
       writeToSerial = true;      
     } else {
-      // Serial.write(Serial.read() + 1);
       Serial.read();
     }
   }
@@ -210,7 +216,7 @@ void loop() {
   /* When it is possible to reply to serial */
   if (writeToSerial) {
     /* Identification byte */
-    Serial.write(201);
+    Serial.write(BAOBOS_ID);
 
     /* Bytes of data with the statuses of the preassure pads. */
     Serial.write(b0);
