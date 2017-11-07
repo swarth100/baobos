@@ -1,5 +1,7 @@
 # BAoBOS
-BAoBOS is a robotic arm that executes, in real life, all of the movements done via the BAoBUI interface.
+BAoBOS is a robotic arm that executes, in real life, all of the movements done via the BAoBUI interface.  
+
+[![BAOBOS VIDEO](https://imgur.com/afMjANT.png)](https://vimeo.com/236781582)
 
 ## Hardware
 BAoBOS is powered by 5 servo-motors whose movement is handled by an Arduino-Uno board.
